@@ -8,9 +8,12 @@ import { getNextJSBuildSpec } from "./getNextJSBuildSpec";
 require("dotenv").config();
 
 export class AmplifyInfraStack extends cdk.Stack {
+  readonly sourceCodeProvider: amplify.GitHubSourceCodeProvider;
+
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
-    const sourceCodeProvider = new amplify.GitHubSourceCodeProvider({
+
+    this.sourceCodeProvider = new amplify.GitHubSourceCodeProvider({
       owner: "cpv123",
       repository: "nextjs-sharing-code-monorepo",
       oauthToken: cdk.SecretValue.plainText(
@@ -21,21 +24,18 @@ export class AmplifyInfraStack extends cdk.Stack {
     // For each app in the monorepo, create an Amplify app.
     const apps = ["app-1", "app-2"];
     apps.forEach((appName) => {
-      this.buildAmplifyApp(appName, sourceCodeProvider);
+      this.buildAmplifyApp(appName);
     });
   }
 
-  buildAmplifyApp(
-    appName: string,
-    sourceCodeProvider: amplify.GitHubSourceCodeProvider
-  ) {
+  buildAmplifyApp(appName: string) {
     const buildSpecJson = getNextJSBuildSpec(appName);
-    const buildSpec = codebuild.BuildSpec.fromObjectToYaml(buildSpecJson);
     const amplifyApp = new amplify.App(this, appName, {
-      sourceCodeProvider,
-      buildSpec,
+      sourceCodeProvider: this.sourceCodeProvider,
+      buildSpec: codebuild.BuildSpec.fromObjectToYaml(buildSpecJson),
       autoBranchDeletion: true,
     });
+
     amplifyApp.addBranch("master");
 
     // This env variable is required for monorepo deployments. The value must match the appRoot value in the buildSpec.
