@@ -2,10 +2,8 @@ import * as cdk from "@aws-cdk/core";
 import * as amplify from "@aws-cdk/aws-amplify";
 import * as codebuild from "@aws-cdk/aws-codebuild";
 import * as iam from "@aws-cdk/aws-iam";
+import * as secretsmanager from "@aws-cdk/aws-secretsmanager";
 import { getNextJSBuildSpec } from "./getNextJSBuildSpec";
-
-// TODO - should use AWS Secrets Manager instead.
-require("dotenv").config();
 
 export class AmplifyInfraStack extends cdk.Stack {
   readonly sourceCodeProvider: amplify.GitHubSourceCodeProvider;
@@ -13,12 +11,18 @@ export class AmplifyInfraStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    // Secret created through the AWS console meaning it has the following JSON format:
+    // { GITHUB_AMPLIFY_ACCESS_TOKEN: gh-access-token-value }
+    const githubAccessToken = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      "githubAmplifyAccessToken",
+      "GitHubAmplifyAccessToken"
+    ).secretValueFromJson("GITHUB_AMPLIFY_ACCESS_TOKEN");
+
     this.sourceCodeProvider = new amplify.GitHubSourceCodeProvider({
       owner: "cpv123",
       repository: "nextjs-sharing-code-monorepo",
-      oauthToken: cdk.SecretValue.plainText(
-        process.env.GITHUB_ACCESS_TOKEN as string
-      ),
+      oauthToken: githubAccessToken,
     });
 
     // For each app in the monorepo, create an Amplify app.
@@ -36,7 +40,8 @@ export class AmplifyInfraStack extends cdk.Stack {
       autoBranchDeletion: true,
     });
 
-    amplifyApp.addBranch("master");
+    amplifyApp.addBranch("develop");
+    amplifyApp.addBranch("main");
 
     // This env variable is required for monorepo deployments. The value must match the appRoot value in the buildSpec.
     amplifyApp.addEnvironment(
