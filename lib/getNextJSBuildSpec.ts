@@ -1,3 +1,4 @@
+// Note the preBuild commands which install dependencies from the monorepo root.
 export const getNextJSBuildSpec = (appName: string) => ({
   version: 1,
   applications: [
@@ -6,7 +7,7 @@ export const getNextJSBuildSpec = (appName: string) => ({
       frontend: {
         phases: {
           preBuild: {
-            commands: ["yarn install"],
+            commands: ["cd ../..", "yarn", `cd packages/${appName}`],
           },
           build: {
             commands: ["yarn build"],
