@@ -2,7 +2,7 @@
 
 Example showing how to deploy SSR Next.js applications within a monorepo to AWS Amplify, using the AWS Cloud Development Kit (CDK).
 
-The monorepo being deployed has two apps: `app-1` and `app-2`. Running `yarn deploy` will create an Amplify application for each, with the necessary configuration to support a monorepo and server-side rendered Next.js applications.
+The [monorepo being deployed](https://github.com/cpv123/nextjs-sharing-code-monorepo) has two apps: `app-1` and `app-2`. Running `yarn deploy` will create an Amplify application for each, with the necessary configuration to support a monorepo and server-side rendered Next.js applications.
 
 ## Issues
 
